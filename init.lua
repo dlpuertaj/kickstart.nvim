@@ -110,7 +110,7 @@ do
   vim.o.number = true
   -- You can also add relative line numbers, to help with jumping.
   --  Experiment for yourself to see if you like it!
-  -- vim.o.relativenumber = true
+  vim.o.relativenumber = true
 
   -- Enable mouse mode, can be useful for resizing splits for example!
   vim.o.mouse = 'a'
@@ -244,6 +244,20 @@ do
     desc = 'Highlight when yanking (copying) text',
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function() vim.hl.on_yank() end,
+  })
+
+  -- Open most recent file when nvim is started with no arguments
+  vim.api.nvim_create_autocmd('VimEnter', {
+    desc = 'Open most recent file when started with no arguments',
+    group = vim.api.nvim_create_augroup('kickstart-open-recent', { clear = true }),
+    callback = function()
+      if vim.fn.argc() == 0 then
+        local recent = vim.v.oldfiles[1]
+        if recent and vim.fn.filereadable(recent) == 1 then
+          vim.cmd('edit ' .. vim.fn.fnameescape(recent))
+        end
+      end
+    end,
   })
 end
 
@@ -752,9 +766,7 @@ do
   --
   -- You can press `g?` for help in this menu.
   local ensure_installed = vim.tbl_keys(servers or {})
-  vim.list_extend(ensure_installed, {
-    -- You can add other tools here that you want Mason to install
-  })
+  vim.list_extend(ensure_installed, {})
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -947,7 +959,36 @@ do
 end
 
 -- ============================================================
--- SECTION 9: OPTIONAL EXAMPLES / NEXT STEPS
+-- SECTION 9: INDENT GUIDES
+-- indent-blankline.nvim
+-- ============================================================
+do
+  vim.pack.add { gh 'lukas-reineke/indent-blankline.nvim' }
+  require('ibl').setup {
+    indent = { char = '▏' },
+    scope = { enabled = true },
+  }
+end
+
+-- ============================================================
+-- SECTION 10: FILE EXPLORER
+-- oil.nvim
+-- ============================================================
+do
+  vim.pack.add { gh 'stevearc/oil.nvim' }
+  require('oil').setup {
+    default_file_explorer = true,
+    view_options = { show_hidden = true },
+    keymaps = {
+      ['<C-h>'] = false, -- free up C-h for window navigation
+      ['<C-l>'] = false, -- free up C-l for window navigation
+    },
+  }
+  vim.keymap.set('n', '-', '<cmd>Oil<cr>', { desc = 'Open parent directory' })
+end
+
+-- ============================================================
+-- SECTION 11: OPTIONAL EXAMPLES / NEXT STEPS
 -- kickstart.plugins.* examples
 -- ============================================================
 do
@@ -962,7 +1003,7 @@ do
   --
   -- require 'kickstart.plugins.debug'
   -- require 'kickstart.plugins.indent_line'
-  -- require 'kickstart.plugins.lint'
+  require 'kickstart.plugins.lint'
   -- require 'kickstart.plugins.autopairs'
   -- require 'kickstart.plugins.neo-tree'
   -- require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
@@ -970,7 +1011,7 @@ do
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- require 'custom.plugins'
+  require 'custom.plugins'
 end
 
 -- The line beneath this is called `modeline`. See `:help modeline`
